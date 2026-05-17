@@ -388,7 +388,7 @@ let currentPeriod=7, currentCatPeriod=7, currentChartType='bar';
 
 function getCfg(){return LS('hab_cfg')||{...DEF_CFG};}
 function saveCfg(c){SS('hab_cfg',c);}
-function getDay(key){const all=LS('hab_days')||{};if(!all[key]){const c=getCfg();all[key]={rest:false,water:0,sleep:0,train:c.trainTasks.map(()=>false),food:c.foodTasks.map(()=>false),supp:c.suppTasks.map(()=>false)};SS('hab_days',all);}return all[key];}
+function getDayData(key){const all=LS('hab_days')||{};if(!all[key]){const c=getCfg();all[key]={rest:false,water:0,sleep:0,train:c.trainTasks.map(()=>false),food:c.foodTasks.map(()=>false),supp:c.suppTasks.map(()=>false)};SS('hab_days',all);}return all[key];}
 function saveDay(key,d){const all=LS('hab_days')||{};all[key]=d;SS('hab_days',all);}
 
 function calcScore(d,cfg){
@@ -426,7 +426,7 @@ function applyCustomColor(hex){
 
 /* ── RENDER HOME ── */
 function renderHome(){
-  const key=todayKey(),d=getDay(key),cfg=getCfg(),{overall,cats}=calcScore(d,cfg);
+  const key=todayKey(),d=getDayData(key),cfg=getCfg(),{overall,cats}=calcScore(d,cfg);
   const C=226.2,off=C-(C*overall/100);
   const accentHex=cfg.accentColor||'#d4ff4e';
   document.getElementById('ringTrack').style.strokeDashoffset=off;
@@ -476,10 +476,10 @@ function buildTaskCard({id,name,tasks,done,cat,color}){
   </div>`;
 }
 
-function toggleRest(){const key=todayKey(),d=getDay(key);d.rest=!d.rest;saveDay(key,d);renderHome();}
-function toggleTask(cat,i){const key=todayKey(),d=getDay(key);d[cat][i]=!d[cat][i];saveDay(key,d);renderHome();}
-function drink(i){const key=todayKey(),d=getDay(key);d.water=d.water===i+1?i:i+1;saveDay(key,d);renderHome();}
-function adjSleep(delta){const key=todayKey(),d=getDay(key);d.sleep=Math.max(0,Math.min(24,+(d.sleep+delta).toFixed(1)));saveDay(key,d);renderHome();}
+function toggleRest(){const key=todayKey(),d=getDayData(key);d.rest=!d.rest;saveDay(key,d);renderHome();}
+function toggleTask(cat,i){const key=todayKey(),d=getDayData(key);d[cat][i]=!d[cat][i];saveDay(key,d);renderHome();}
+function drink(i){const key=todayKey(),d=getDayData(key);d.water=d.water===i+1?i:i+1;saveDay(key,d);renderHome();}
+function adjSleep(delta){const key=todayKey(),d=getDayData(key);d.sleep=Math.max(0,Math.min(24,+(d.sleep+delta).toFixed(1)));saveDay(key,d);renderHome();}
 
 /* ── GRAPH ── */
 function setPeriod(n,el){currentPeriod=n;document.querySelectorAll('#s-graph .g-card:first-of-type .ptab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderGraph();}
@@ -591,7 +591,7 @@ function saveSettings(){
   cfg.waterGoal=parseInt(document.getElementById('cfg-water').value)||16;
   cfg.sleepGoal=parseInt(document.getElementById('cfg-sleep').value)||8;
   saveCfg(cfg);
-  const key=todayKey(),d=getDay(key);
+  const key=todayKey(),d=getDayData(key);
   ['train','food','supp'].forEach(t=>{const k=t==='train'?'trainTasks':t==='food'?'foodTasks':'suppTasks';while(d[t].length<cfg[k].length)d[t].push(false);d[t]=d[t].slice(0,cfg[k].length);});
   saveDay(key,d);
   const btn=document.querySelector('.save-big');btn.textContent='✓ KAYDEDİLDİ';setTimeout(()=>btn.textContent='KAYDET',1500);
