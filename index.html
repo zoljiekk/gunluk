@@ -301,18 +301,6 @@ input[type="color"]{width:36px;height:36px;border:1px solid var(--border2);borde
 <div id="s-settings" class="screen">
 <div class="wrap">
   <div class="s-section">
-    <div class="s-head">Bulut Yedekleme</div>
-    <div class="s-row" style="flex-direction:column;align-items:flex-start;gap:10px;">
-      <div style="font-size:12px;color:var(--muted2)" id="lastSyncTime">Yükleniyor...</div>
-      <div id="syncStatus" style="font-family:var(--font-mono);font-size:11px;min-height:16px;"></div>
-      <div style="display:flex;gap:8px;">
-        <button class="add-btn" onclick="syncToSheets()">☁️ Şimdi Kaydet</button>
-        <button class="add-btn" onclick="syncFromSheets()">⬇️ Buluttan Yükle</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="s-section">
     <div class="s-head">Renk Teması</div>
     <div class="s-row" style="flex-direction:column;align-items:flex-start;gap:12px;">
       <div class="color-swatches" id="settingsSwatches">
@@ -389,7 +377,7 @@ let currentPeriod=7, currentCatPeriod=7, currentChartType='bar';
 function getCfg(){return LS('hab_cfg')||{...DEF_CFG};}
 function saveCfg(c){SS('hab_cfg',c);}
 function getDayData(key){const all=LS('hab_days')||{};if(!all[key]){const c=getCfg();all[key]={rest:false,water:0,sleep:0,train:(c.trainTasks||[]).map(()=>false),food:(c.foodTasks||[]).map(()=>false),supp:(c.suppTasks||[]).map(()=>false)};SS('hab_days',all);}const d=all[key];if(!d.train)d.train=[];if(!d.food)d.food=[];if(!d.supp)d.supp=[];return d;}
-function saveDay(key,d){const all=LS('hab_days')||{};all[key]=d;SS('hab_days',all);syncToSheets();}
+function saveDay(key,d){const all=LS('hab_days')||{};all[key]=d;SS('hab_days',all);}
 
 function calcScore(d,cfg){
   const cats=[];
@@ -607,58 +595,11 @@ function nav(screen,el){
   if(screen==='settings')renderSettings();
 }
 
-/* ── GOOGLE SHEETS SYNC ── */
-const GS_URL='https://script.google.com/macros/s/AKfycbwPgfHeIPjNGEZjH00KZBRGgA01NbJZ0lilLszIM9sD6wVRIaLGR7ieFiuywE2bnx8/exec';
-
-function showSyncStatus(msg,color='var(--muted2)'){
-  const el=document.getElementById('syncStatus');
-  if(!el)return;
-  el.textContent=msg;el.style.color=color;
-  setTimeout(()=>{if(el)el.textContent='';},3000);
-}
-function updateSyncTime(){
-  const el=document.getElementById('lastSyncTime');
-  if(!el)return;
-  const t=LS('last_sync');
-  if(!t){el.textContent='Henüz sync yapılmadı';return;}
-  const dt=new Date(t);
-  el.textContent=`Son sync: ${dt.toLocaleDateString('tr-TR')} ${dt.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'})}`;
-}
-async function syncToSheets(){
-  showSyncStatus('☁️ Kaydediliyor...','var(--accent)');
-  try{
-    const all=LS('hab_days')||{};
-    const cfg=LS('hab_cfg')||{};
-    await fetch(GS_URL,{method:'POST',body:JSON.stringify({key:'hab_days',value:all})});
-    await fetch(GS_URL,{method:'POST',body:JSON.stringify({key:'hab_cfg',value:cfg})});
-    SS('last_sync',new Date().toISOString());
-    showSyncStatus('✓ Buluta kaydedildi','#34d399');
-    updateSyncTime();
-  }catch(e){showSyncStatus('✗ Bağlantı hatası','#ff4444');}
-}
-async function syncFromSheets(){
-  showSyncStatus('☁️ Yükleniyor...','var(--accent)');
-  try{
-    const res=await fetch(GS_URL);
-    const json=await res.json();
-    if(json.status==='ok'&&json.data){
-      if(json.data.hab_days)SS('hab_days',JSON.stringify(json.data.hab_days));
-      if(json.data.hab_cfg)SS('hab_cfg',JSON.stringify(json.data.hab_cfg));
-      showSyncStatus('✓ Veriler yüklendi','#34d399');
-      applyAccent((getCfg().accentColor)||'#d4ff4e');
-      renderHome();
-    }else{showSyncStatus('','var(--muted2)');}
-  }catch(e){showSyncStatus('✗ Bağlantı hatası','#ff4444');}
-}
-// Her veri kaydında otomatik buluta at
-
-
 /* ── INIT ── */
 const now=new Date();
 document.getElementById('topDate').textContent=`${TR_DAYS[now.getDay()]} ${now.getDate()} ${TR_MONTHS[now.getMonth()]}`;
 applyAccent((getCfg().accentColor)||'#d4ff4e');
-renderHome(); syncFromSheets();
-updateSyncTime();
+renderHome();
 </script>
 </body>
 </html>
