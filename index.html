@@ -378,7 +378,7 @@ input[type="color"]{width:36px;height:36px;border:1px solid var(--border2);borde
 
 <script>
 const todayKey=()=>new Date().toISOString().split('T')[0];
-const LS=k=>JSON.parse(localStorage.getItem(k)||'null');
+const LS=k=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}};
 const SS=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
 const TR_DAYS=['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
 const TR_MONTHS=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
@@ -388,7 +388,7 @@ let currentPeriod=7, currentCatPeriod=7, currentChartType='bar';
 
 function getCfg(){return LS('hab_cfg')||{...DEF_CFG};}
 function saveCfg(c){SS('hab_cfg',c);}
-function getDayData(key){const all=LS('hab_days')||{};if(!all[key]){const c=getCfg();all[key]={rest:false,water:0,sleep:0,train:c.trainTasks.map(()=>false),food:c.foodTasks.map(()=>false),supp:c.suppTasks.map(()=>false)};SS('hab_days',all);}return all[key];}
+function getDayData(key){const all=LS('hab_days')||{};if(!all[key]){const c=getCfg();all[key]={rest:false,water:0,sleep:0,train:(c.trainTasks||[]).map(()=>false),food:(c.foodTasks||[]).map(()=>false),supp:(c.suppTasks||[]).map(()=>false)};SS('hab_days',all);}const d=all[key];if(!d.train)d.train=[];if(!d.food)d.food=[];if(!d.supp)d.supp=[];return d;}
 function saveDay(key,d){const all=LS('hab_days')||{};all[key]=d;SS('hab_days',all);syncToSheets();}
 
 function calcScore(d,cfg){
