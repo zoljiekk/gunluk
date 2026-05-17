@@ -389,7 +389,7 @@ let currentPeriod=7, currentCatPeriod=7, currentChartType='bar';
 function getCfg(){return LS('hab_cfg')||{...DEF_CFG};}
 function saveCfg(c){SS('hab_cfg',c);}
 function getDayData(key){const all=LS('hab_days')||{};if(!all[key]){const c=getCfg();all[key]={rest:false,water:0,sleep:0,train:c.trainTasks.map(()=>false),food:c.foodTasks.map(()=>false),supp:c.suppTasks.map(()=>false)};SS('hab_days',all);}return all[key];}
-function saveDay(key,d){const all=LS('hab_days')||{};all[key]=d;SS('hab_days',all);}
+function saveDay(key,d){const all=LS('hab_days')||{};all[key]=d;SS('hab_days',all);syncToSheets();}
 
 function calcScore(d,cfg){
   const cats=[];
@@ -651,15 +651,13 @@ async function syncFromSheets(){
   }catch(e){showSyncStatus('✗ Bağlantı hatası','#ff4444');}
 }
 // Her veri kaydında otomatik buluta at
-const _saveDayOrig=saveDay;
-// eslint-disable-next-line no-global-assign
-saveDay=function(key,d){_saveDayOrig(key,d);syncToSheets();};
+
 
 /* ── INIT ── */
 const now=new Date();
 document.getElementById('topDate').textContent=`${TR_DAYS[now.getDay()]} ${now.getDate()} ${TR_MONTHS[now.getMonth()]}`;
 applyAccent((getCfg().accentColor)||'#d4ff4e');
-syncFromSheets().catch(()=>renderHome());
+renderHome(); syncFromSheets();
 updateSyncTime();
 </script>
 </body>
